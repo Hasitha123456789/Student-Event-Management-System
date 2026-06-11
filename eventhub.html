@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EventHub — Student Event Management System</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --accent:#534AB7;--accent-light:#EEEDFE;--accent-mid:#AFA9EC;
+  --bg:#f5f5f7;--surface:#ffffff;--surface2:#f8f8fa;
+  --border:#e4e4e8;--border2:#d0d0d8;
+  --text:#1a1a2a;--text2:#555568;--text3:#999aaa;
+  --green-bg:#EAF3DE;--green:#3B6D11;--green-border:#C0DD97;
+  --blue-bg:#E6F1FB;--blue:#185FA5;--blue-border:#B5D4F4;
+  --amber-bg:#FAEEDA;--amber:#854F0B;--amber-border:#FAC775;
+  --red-bg:#FCEBEB;--red:#A32D2D;--red-border:#F09595;
+  --pink-bg:#FBEAF0;--pink:#993556;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);display:flex;min-height:100vh;font-size:14px;color:var(--text)}
+/* Sidebar */
+.sidebar{width:224px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:20}
+.logo{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
+.logo-title{font-size:16px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:7px}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:3px}
+.nav-section{padding:6px 0}
+.nav-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:6px 18px 2px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 18px;cursor:pointer;color:var(--text2);transition:background .13s,color .13s;border-left:2px solid transparent;font-size:13px;text-decoration:none}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent-light);color:var(--accent);border-left-color:var(--accent);font-weight:500}
+.nav-item i{font-size:17px;width:20px;flex-shrink:0}
+.user-card{margin-top:auto;padding:14px 18px;border-top:1px solid var(--border);background:var(--surface2)}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--accent);flex-shrink:0}
+.user-info-wrap{display:flex;align-items:center;gap:9px}
+.user-name{font-size:13px;font-weight:500;color:var(--text)}
+.user-dept{font-size:11px;color:var(--text3)}
+/* Main */
+.main{margin-left:224px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-left h1{font-size:16px;font-weight:600;color:var(--text)}
+.topbar-left p{font-size:12px;color:var(--text3);margin-top:2px}
+.topbar-right{display:flex;gap:8px;align-items:center}
+.page{padding:22px 24px;display:none;flex:1}
+.page.active{display:block}
+/* Buttons */
+.btn{padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;font-family:inherit;transition:.13s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--surface2)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#3C3489;border-color:#3C3489}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-success{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.btn-success:hover{background:#C0DD97}
+.btn-danger{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.btn-danger:hover{background:#F7C1C1}
+/* Cards & layout */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.kpi{background:var(--surface);padding:18px;border-radius:var(--radius-lg);border:1px solid var(--border);display:flex;flex-direction:column;gap:4px;transition:box-shadow .2s}
+.kpi:hover{box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.kpi-icon{font-size:20px;margin-bottom:4px}
+.kpi-val{font-size:24px;font-weight:600;color:var(--text)}
+.kpi-lbl{font-size:12px;color:var(--text3)}
+.section-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px}
+.card{background:var(--surface);border-radius:var(--radius-lg);padding:18px;border:1px solid var(--border)}
+.card-full{grid-column:1/-1}
+.card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+/* Event rows */
+.event-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.event-row:last-child{border-bottom:none}
+.event-row:hover .event-title{color:var(--accent)}
+.event-date-box{min-width:46px;height:46px;border-radius:var(--radius);background:var(--accent-light);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.date-month{font-size:9px;color:var(--accent);text-transform:uppercase;font-weight:600}
+.date-day{font-size:17px;font-weight:700;color:var(--accent);line-height:1}
+.event-info{flex:1;min-width:0}
+.event-title{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.event-meta{font-size:11px;color:var(--text3);margin-top:2px}
+/* Badges */
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap;display:inline-block}
+.badge-workshop{background:var(--blue-bg);color:var(--blue)}
+.badge-cultural{background:var(--pink-bg);color:var(--pink)}
+.badge-seminar{background:var(--green-bg);color:var(--green)}
+.badge-sports{background:var(--amber-bg);color:var(--amber)}
+.badge-conference{background:var(--accent-light);color:var(--accent)}
+.badge-pending{background:var(--amber-bg);color:var(--amber)}
+.badge-approved{background:var(--green-bg);color:var(--green)}
+.badge-completed{background:#F1EFE8;color:#5F5E5A}
+.badge-cancelled{background:var(--red-bg);color:var(--red)}
+.role-badge-student{background:var(--green-bg);color:var(--green)}
+.role-badge-faculty{background:var(--blue-bg);color:var(--blue)}
+.role-badge-admin{background:var(--amber-bg);color:var(--amber)}
+.spots{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--surface2);color:var(--text2)}
+.spots.low{background:var(--red-bg);color:var(--red)}
+/* Table */
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th{font-size:11px;font-weight:600;color:var(--text3);text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.table td{padding:10px;border-bottom:1px solid var(--border);color:var(--text)}
+.table tr:last-child td{border-bottom:none}
+.table tbody tr:hover td{background:var(--surface2);cursor:pointer}
+/* Forms */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.form-label{font-size:12px;font-weight:500;color:var(--text2)}
+.form-input{padding:8px 11px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;width:100%;transition:border-color .13s}
+.form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(83,74,183,.12)}
+select.form-input{cursor:pointer}
+textarea.form-input{resize:vertical;min-height:76px}
+/* AI card */
+.ai-card{background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px}
+.ai-card:last-child{margin-bottom:0}
+.ai-label{font-size:10px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+/* Progress */
+.progress-bar{height:7px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .4s}
+/* Attendance */
+.att-status{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;border-radius:20px}
+.att-registered{background:var(--blue-bg);color:var(--blue)}
+.att-attended{background:var(--green-bg);color:var(--green)}
+.att-absent{background:var(--red-bg);color:var(--red)}
+/* Budget */
+.budget-cat-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;color:var(--text2)}
+/* Filter bar */
+.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filter-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;transition:.13s}
+.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filter-btn:hover:not(.active){background:var(--surface2)}
+.search-input{padding:7px 11px;border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;font-family:inherit;background:var(--surface);color:var(--text);flex:1;min-width:160px}
+.search-input:focus{outline:none;border-color:var(--accent)}
+/* Conflict warning */
+.conflict-warn{background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--amber);margin-bottom:12px;display:none;align-items:center;gap:6px}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:22px;width:540px;max-width:95vw;max-height:88vh;overflow-y:auto}
+.modal-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.modal-close{cursor:pointer;color:var(--text3);font-size:18px;line-height:1;padding:2px}
+.modal-close:hover{color:var(--text)}
+/* Login */
+.login-wrap{max-width:380px;margin:60px auto}
+.login-demo{margin-top:18px;padding:12px 14px;background:var(--surface2);border-radius:var(--radius);font-size:12px;color:var(--text2);border:1px solid var(--border)}
+/* Flash/toast */
+.toast{position:fixed;top:18px;right:18px;padding:11px 18px;border-radius:var(--radius);font-size:13px;z-index:300;opacity:0;pointer-events:none;transition:opacity .25s;max-width:300px}
+.toast.show{opacity:1}
+.toast.success{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.toast.error{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+/* Flash inline */
+.flash{padding:10px 14px;border-radius:var(--radius);font-size:13px;margin-bottom:14px;display:none}
+.flash.error{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+/* Stars */
+.rating-stars{display:flex;gap:5px;cursor:pointer}
+.star{font-size:22px;color:var(--border2);transition:color .1s;line-height:1}
+.star.on{color:#EF9F27}
+/* Certificate */
+.cert-box{border:2px dashed var(--accent-mid);border-radius:var(--radius-lg);padding:28px;text-align:center;background:var(--accent-light)}
+/* QR placeholder */
+.qr-box{width:84px;height:84px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);margin:10px auto;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3)}
+/* Report stat row */
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+/* Empty state */
+.empty{text-align:center;padding:36px;color:var(--text3);font-size:13px}
+.empty i{font-size:36px;display:block;margin-bottom:10px;opacity:.5}
+/* Responsive */
+@media(max-width:900px){
+  .sidebar{width:200px}
+  .main{margin-left:200px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .section-grid{grid-template-columns:1fr}
+  .card-full{grid-column:auto}
+}
+@media(max-width:600px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .page{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-title"><i class="ti ti-calendar-event"></i> EventHub</div>
+    <div class="logo-sub">Student event management</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Main</div>
+    <div class="nav-item active" onclick="navigate('dashboard')"><i class="ti ti-layout-dashboard"></i>Dashboard</div>
+    <div class="nav-item" onclick="navigate('events')"><i class="ti ti-calendar"></i>All events</div>
+    <div class="nav-item" onclick="navigate('my-events')"><i class="ti ti-bookmark"></i>My events</div>
+  </div>
+  <div class="nav-section" id="nav-admin" style="display:none">
+    <div class="nav-label">Manage</div>
+    <div class="nav-item" onclick="navigate('create-event')"><i class="ti ti-circle-plus"></i>Create event</div>
+    <div class="nav-item" onclick="navigate('attendance')"><i class="ti ti-user-check"></i>Attendance</div>
+    <div class="nav-item" onclick="navigate('budget')"><i class="ti ti-wallet"></i>Budget</div>
+    <div class="nav-item" onclick="navigate('reports')"><i class="ti ti-chart-bar"></i>Reports</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Account</div>
+    <div class="nav-item" id="nav-login-link" onclick="navigate('login')"><i class="ti ti-login"></i>Login</div>
+    <div class="nav-item" id="nav-logout-link" style="display:none" onclick="logout()"><i class="ti ti-logout"></i>Logout</div>
+  </div>
+  <div class="user-card" id="user-card" style="display:none">
+    <div class="user-info-wrap">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <div>
+        <div class="user-name" id="user-name-txt">-</div>
+        <div class="user-dept" id="user-dept-txt">-</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 id="page-title">EventHub</h1>
+      <p id="page-sub">Student event management system</p>
+    </div>
+    <div class="topbar-right">
+      <span id="user-badge-top"></span>
+      <button class="btn btn-primary btn-sm" onclick="navigate('create-event')" id="quick-create-btn" style="display:none"><i class="ti ti-plus"></i> New event</button>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="page-login" class="page active">
+    <div class="login-wrap">
+      <div class="card" style="padding:28px">
+        <div style="text-align:center;margin-bottom:22px">
+          <i class="ti ti-calendar-event" style="font-size:36px;color:var(--accent)"></i>
+          <div style="font-size:18px;font-weight:600;margin-top:8px">Sign in to EventHub</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px">Student event management system</div>
+        </div>
+        <div id="login-flash" class="flash"></div>
+        <div class="form-group"><div class="form-label">Username</div>
+          <input id="login-user" class="form-input" placeholder="admin / student1 / dr.silva" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+        <div class="form-group"><div class="form-label">Password</div>
+          <input id="login-pass" class="form-input" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="doLogin()">Sign in</button>
+        <div class="login-demo">
+          <div style="font-weight:600;margin-bottom:7px">Demo credentials</div>
+          <div style="margin-bottom:4px">🎓 Student: <b>student1</b> / student123</div>
+          <div style="margin-bottom:4px">👨‍🏫 Faculty: <b>dr.silva</b> / faculty123</div>
+          <div>🔧 Admin: <b>admin</b> / admin123</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page">
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-icon"><i class="ti ti-calendar-event" style="color:var(--accent)"></i></div><div class="kpi-val" id="kpi-total">0</div><div class="kpi-lbl">Total events</div></div>
+      <div class="kpi"><div class="kpi-icon"><i class="ti ti-flame" style="color:#993C1D"></i></div><div class="kpi-val" id="kpi-active">0</div><div class="kpi-lbl">Active events</div></div>
+      <div class="kpi"><div class="kpi-icon"><i class="ti ti-users" style="color:var(--blue)"></i></div><div class="kpi-val" id="kpi-students">0</div><div class="kpi-lbl">Students</div></div>
+      <div class="kpi"><div class="kpi-icon"><i class="ti ti-circle-check" style="color:var(--green)"></i></div><div class="kpi-val" id="kpi-regs">0</div><div class="kpi-lbl">Registrations</div></div>
+    </div>
+    <div class="section-grid">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-calendar-due" style="color:var(--accent)"></i>Upcoming events</div>
+        <div id="dash-upcoming"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-sparkles" style="color:var(--amber)"></i>AI recommendations</div>
+        <div id="dash-ai"></div>
+      </div>
+      <div class="card card-full">
+        <div class="card-title"><i class="ti ti-chart-pie" style="color:var(--accent)"></i>Events by category</div>
+        <div id="dash-cats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL EVENTS -->
+  <div id="page-events" class="page">
+    <div class="filter-bar">
+      <input class="search-input" placeholder="Search events by name or venue..." id="event-search" oninput="renderEvents()"/>
+      <button class="filter-btn active" onclick="setFilter(this,'all')" data-type="all">All</button>
+      <button class="filter-btn" onclick="setFilter(this,'workshop')" data-type="workshop">Workshop</button>
+      <button class="filter-btn" onclick="setFilter(this,'seminar')" data-type="seminar">Seminar</button>
+      <button class="filter-btn" onclick="setFilter(this,'cultural')" data-type="cultural">Cultural</button>
+      <button class="filter-btn" onclick="setFilter(this,'sports')" data-type="sports">Sports</button>
+      <button class="filter-btn" onclick="setFilter(this,'conference')" data-type="conference">Conference</button>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="table">
+        <thead><tr>
+          <th style="padding-left:16px">Event</th>
+          <th>Date</th><th>Venue</th><th>Type</th><th>Status</th><th>Spots</th><th>You</th>
+        </tr></thead>
+        <tbody id="events-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MY EVENTS -->
+  <div id="page-my-events" class="page">
+    <div class="section-grid" id="my-events-grid"></div>
+    <div id="my-events-empty" class="empty" style="display:none"><i class="ti ti-calendar-off"></i>You haven't registered for any events yet.<br><br><button class="btn btn-primary btn-sm" onclick="navigate('events')">Browse events</button></div>
+  </div>
+
+  <!-- CREATE EVENT -->
+  <div id="page-create-event" class="page">
+    <div class="card" style="max-width:640px">
+      <div class="card-title"><i class="ti ti-circle-plus" style="color:var(--accent)"></i>Create new event</div>
+      <div id="conflict-warn" class="conflict-warn"><i class="ti ti-alert-triangle"></i> <span id="conflict-msg">Venue conflict detected.</span></div>
+      <div class="form-group" style="margin-bottom:14px">
+        <div class="form-label">Event title *</div>
+        <input id="ev-title" class="form-input" placeholder="e.g. AI Workshop 2025"/>
+      </div>
+      <div class="form-group"><div class="form-label">Description</div>
+        <textarea id="ev-desc" class="form-input" placeholder="Describe the event..."></textarea>
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <div class="form-group"><div class="form-label">Event type</div>
+          <select id="ev-type" class="form-input" onchange="updateAIBudget()">
+            <option value="workshop">Workshop</option><option value="seminar">Seminar</option>
+            <option value="cultural">Cultural</option><option value="sports">Sports</option>
+            <option value="conference">Conference</option>
+          </select>
+        </div>
+        <div class="form-group"><div class="form-label">Venue *</div>
+          <input id="ev-venue" class="form-input" placeholder="e.g. Main Hall, Lab A"/>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <div class="form-group"><div class="form-label">Start date & time *</div>
+          <input id="ev-start" class="form-input" type="datetime-local"/>
+        </div>
+        <div class="form-group"><div class="form-label">End date & time *</div>
+          <input id="ev-end" class="form-input" type="datetime-local"/>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <div class="form-group"><div class="form-label">Registration deadline</div>
+          <input id="ev-deadline" class="form-input" type="datetime-local"/>
+        </div>
+        <div class="form-group"><div class="form-label">Max participants</div>
+          <input id="ev-max" class="form-input" type="number" value="50" min="1"/>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group"><div class="form-label">Budget (Rs.)</div>
+          <input id="ev-budget" class="form-input" type="number" value="0" min="0" oninput="updateAIBudget()"/>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Requires faculty approval</div>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer">
+            <input id="ev-approval" type="checkbox" checked style="width:16px;height:16px;accent-color:var(--accent)"/>
+            <span style="font-size:13px">Yes, needs approval</span>
+          </label>
+        </div>
+      </div>
+      <div id="ai-budget-recs" class="ai-card" style="display:none;margin-bottom:16px">
+        <div class="ai-label"><i class="ti ti-sparkles"></i> AI budget allocation recommendation</div>
+        <div id="ai-budget-content"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="createEvent()"><i class="ti ti-circle-check"></i> Create event</button>
+        <button class="btn" onclick="navigate('events')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE -->
+  <div id="page-attendance" class="page">
+    <div class="card" style="max-width:600px">
+      <div class="card-title"><i class="ti ti-user-check" style="color:var(--accent)"></i>Mark attendance</div>
+      <div class="form-group">
+        <div class="form-label">Select event</div>
+        <select id="att-event" class="form-input" onchange="loadAttendance()"></select>
+      </div>
+      <div id="att-list"></div>
+    </div>
+  </div>
+
+  <!-- BUDGET -->
+  <div id="page-budget" class="page">
+    <div class="section-grid">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-wallet" style="color:var(--accent)"></i>Budget overview</div>
+        <div class="form-group"><div class="form-label">Select event</div>
+          <select id="budget-event" class="form-input" onchange="loadBudget()"></select>
+        </div>
+        <div id="budget-summary"></div>
+        <div id="budget-ai-recs" class="ai-card" style="display:none;margin-top:14px">
+          <div class="ai-label"><i class="ti ti-sparkles"></i> AI budget allocation</div>
+          <div id="budget-ai-content"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-receipt" style="color:var(--accent)"></i>Add expense</div>
+        <div class="form-group"><div class="form-label">Description</div><input id="exp-desc" class="form-input" placeholder="e.g. Venue booking fee"/></div>
+        <div class="form-row" style="margin-bottom:0">
+          <div class="form-group"><div class="form-label">Amount (Rs.)</div><input id="exp-amt" class="form-input" type="number" min="0" placeholder="0"/></div>
+          <div class="form-group"><div class="form-label">Category</div>
+            <select id="exp-cat" class="form-input">
+              <option>venue</option><option>catering</option><option>equipment</option>
+              <option>marketing</option><option>materials</option><option>honorarium</option><option>misc</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addExpense()"><i class="ti ti-plus"></i> Add expense</button>
+      </div>
+      <div class="card card-full">
+        <div class="card-title"><i class="ti ti-list" style="color:var(--accent)"></i>Expense records</div>
+        <table class="table">
+          <thead><tr><th style="padding-left:10px">Description</th><th>Category</th><th>Amount</th><th></th></tr></thead>
+          <tbody id="expenses-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div id="page-reports" class="page">
+    <div class="section-grid">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-chart-bar" style="color:var(--accent)"></i>Events by type</div>
+        <div id="report-types"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-trophy" style="color:var(--amber)"></i>Most popular events</div>
+        <div id="report-popular"></div>
+      </div>
+      <div class="card card-full">
+        <div class="card-title"><i class="ti ti-chart-line" style="color:var(--accent)"></i>System overview</div>
+        <div id="report-overview" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- EVENT DETAIL MODAL -->
+<div class="modal-overlay" id="event-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-title-txt">Event details</span>
+      <span class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></span>
+    </div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- CERTIFICATE MODAL -->
+<div class="modal-overlay" id="cert-modal" onclick="if(event.target===this)closeCertModal()">
+  <div class="modal" style="max-width:420px;text-align:center">
+    <div class="modal-title"><span>Certificate of Participation</span><span class="modal-close" onclick="closeCertModal()"><i class="ti ti-x"></i></span></div>
+    <div id="cert-content"></div>
+    <button class="btn btn-success" style="margin-top:16px" onclick="closeCertModal()"><i class="ti ti-check"></i> Done</button>
+  </div>
+</div>
+
+<!-- FEEDBACK MODAL -->
+<div class="modal-overlay" id="feedback-modal" onclick="if(event.target===this)closeFbModal()">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title"><span id="fb-modal-title">Rate this event</span><span class="modal-close" onclick="closeFbModal()"><i class="ti ti-x"></i></span></div>
+    <div id="fb-form"></div>
+  </div>
+</div>
+
+<script>
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+const USERS = {
+  student1:{pw:'student123',name:'Amal Fernando',role:'student',dept:'Computer Science',yr:3,sid:'STU001'},
+  student2:{pw:'student123',name:'Nimali Rathnayake',role:'student',dept:'Business',yr:2,sid:'STU002'},
+  student3:{pw:'student123',name:'Kasun Bandara',role:'student',dept:'Engineering',yr:4,sid:'STU003'},
+  'dr.silva':{pw:'faculty123',name:'Dr. Kamal Silva',role:'faculty',dept:'Computer Science',sid:'FAC001'},
+  'prof.perera':{pw:'faculty123',name:'Prof. Nimali Perera',role:'faculty',dept:'Engineering',sid:'FAC002'},
+  admin:{pw:'admin123',name:'System Administrator',role:'admin',dept:'Administration',sid:'ADMIN001'}
+};
+
+let currentUser = null;
+let currentFilter = 'all';
+let fbRating = 0;
+let fbEventId = null;
+let nextEvId = 6, nextRegId = 20, nextExpId = 20;
+
+const db = {
+  events:[
+    {id:1,code:'EVT001',title:'AI in Education Workshop',desc:'Learn how AI is transforming education. Hands-on workshop with practical examples and real case studies.',type:'workshop',venue:'CS Lab, Building A',start:'2025-03-15T09:00',end:'2025-03-15T17:00',deadline:'2025-03-10T23:59',maxP:50,curP:28,budget:50000,organizer:'admin',status:'approved'},
+    {id:2,code:'EVT002',title:'Annual Cultural Fest 2025',desc:'Celebrate diversity with music, dance, and food from around the world. Join us for an unforgettable evening.',type:'cultural',venue:'University Main Hall',start:'2025-04-08T14:00',end:'2025-04-08T22:00',deadline:'2025-04-01T23:59',maxP:200,curP:142,budget:150000,organizer:'admin',status:'approved'},
+    {id:3,code:'EVT003',title:'Inter-University Sports Meet',desc:'Annual sports competition between universities. Events include cricket, football, volleyball, and athletics.',type:'sports',venue:'University Sports Complex',start:'2025-05-05T08:00',end:'2025-05-07T18:00',deadline:'2025-04-25T23:59',maxP:300,curP:198,budget:200000,organizer:'admin',status:'approved'},
+    {id:4,code:'EVT004',title:'Python for Data Science Seminar',desc:'Introduction to Python libraries for data analysis and visualization. Suitable for beginners and intermediate programmers.',type:'seminar',venue:'Lecture Hall B',start:'2025-03-28T10:00',end:'2025-03-28T13:00',deadline:'2025-03-25T23:59',maxP:80,curP:61,budget:25000,organizer:'dr.silva',status:'approved'},
+    {id:5,code:'EVT005',title:'IEEE Technical Conference 2025',desc:'Annual international conference on electrical and computer engineering topics.',type:'conference',venue:'Auditorium A',start:'2025-06-20T09:00',end:'2025-06-22T17:00',deadline:'2025-06-10T23:59',maxP:400,curP:5,budget:500000,organizer:'prof.perera',status:'pending'}
+  ],
+  registrations:[
+    {id:1,eventId:1,studentId:'student1',status:'attended',cert:'CERT-A1B2C3D4',certIssued:true},
+    {id:2,eventId:2,studentId:'student1',status:'registered',cert:'CERT-E5F6G7H8',certIssued:false},
+    {id:3,eventId:4,studentId:'student1',status:'registered',cert:'CERT-I9J0K1L2',certIssued:false},
+    {id:4,eventId:1,studentId:'student2',status:'attended',cert:'CERT-M3N4O5P6',certIssued:false},
+    {id:5,eventId:3,studentId:'student2',status:'registered',cert:'CERT-Q7R8S9T0',certIssued:false},
+    {id:6,eventId:1,studentId:'student3',status:'absent',cert:'CERT-U1V2W3X4',certIssued:false},
+    {id:7,eventId:2,studentId:'student3',status:'registered',cert:'CERT-Y5Z6A7B8',certIssued:false}
+  ],
+  expenses:[
+    {id:1,eventId:1,desc:'Venue setup & cleaning',cat:'venue',amt:8000},
+    {id:2,eventId:1,desc:'Refreshments & tea',cat:'catering',amt:12000},
+    {id:3,eventId:1,desc:'Projector rental',cat:'equipment',amt:5000},
+    {id:4,eventId:2,desc:'Stage & decoration',cat:'venue',amt:45000},
+    {id:5,eventId:2,desc:'Food & catering service',cat:'catering',amt:30000},
+    {id:6,eventId:3,desc:'Sports ground booking',cat:'venue',amt:60000},
+    {id:7,eventId:3,desc:'Sports equipment & kit',cat:'equipment',amt:40000}
+  ],
+  feedback:[
+    {id:1,eventId:1,userId:'student1',rating:5,comment:'Excellent workshop, very informative!'},
+    {id:2,eventId:1,userId:'student2',rating:4,comment:'Great content, well organized.'},
+    {id:3,eventId:2,userId:'student3',rating:5,comment:'Amazing cultural fest, loved every moment!'}
+  ]
+};
+
+function notify(msg, type='success'){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast '+type+' show';
+  setTimeout(()=>{ t.className='toast'; }, 2800);
+}
+
+function doLogin(){
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  const f = document.getElementById('login-flash');
+  if(USERS[u] && USERS[u].pw===p){
+    currentUser = {username:u,...USERS[u]};
+    f.style.display='none';
+    setupUI(); navigate('dashboard');
+  } else {
+    f.style.display='block'; f.className='flash error';
+    f.textContent='Invalid username or password. Try: admin / admin123';
+  }
+}
+
+function logout(){
+  currentUser=null; setupUI(); navigate('login');
+}
+
+function setupUI(){
+  const auth=!!currentUser;
+  document.getElementById('nav-login-link').style.display=auth?'none':'flex';
+  document.getElementById('nav-logout-link').style.display=auth?'flex':'none';
+  document.getElementById('user-card').style.display=auth?'block':'none';
+  document.getElementById('nav-admin').style.display=(auth&&currentUser.role!=='student')?'block':'none';
+  document.getElementById('quick-create-btn').style.display=(auth&&currentUser.role!=='student')?'flex':'none';
+  if(auth){
+    document.getElementById('user-avatar').textContent=currentUser.name.split(' ').map(x=>x[0]).join('').slice(0,2);
+    document.getElementById('user-name-txt').textContent=currentUser.name;
+    document.getElementById('user-dept-txt').textContent=currentUser.dept||'';
+    const roleClass={'student':'role-badge-student','faculty':'role-badge-faculty','admin':'role-badge-admin'}[currentUser.role]||'role-badge-student';
+    document.getElementById('user-badge-top').innerHTML=`<span class="badge ${roleClass}">${currentUser.role}</span>`;
+  } else {
+    document.getElementById('user-badge-top').innerHTML='';
+  }
+}
+
+const pageMeta = {
+  dashboard:['Dashboard','Overview of all campus events'],
+  events:['All events','Browse and register for upcoming events'],
+  'my-events':['My events','Your event registrations and certificates'],
+  'create-event':['Create event','Schedule a new campus event'],
+  attendance:['Attendance','Mark student attendance for events'],
+  budget:['Budget management','Track event expenses and allocations'],
+  reports:['Reports & analytics','Insights and statistics'],
+  login:['Sign in','Welcome to EventHub']
+};
+
+function navigate(page){
+  if(!currentUser && page!=='login'){navigate('login');return;}
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const el = document.getElementById('page-'+page);
+  if(!el) return;
+  el.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')===`navigate('${page}')`) n.classList.add('active');
+  });
+  const [title,sub] = pageMeta[page]||[page,''];
+  document.getElementById('page-title').textContent=title;
+  document.getElementById('page-sub').textContent=sub;
+  if(page==='dashboard') renderDashboard();
+  if(page==='events') renderEvents();
+  if(page==='my-events') renderMyEvents();
+  if(page==='attendance') renderAttendancePage();
+  if(page==='budget') renderBudgetPage();
+  if(page==='reports') renderReports();
+  if(page==='create-event') document.getElementById('conflict-warn').style.display='none';
+}
+
+function renderDashboard(){
+  if(!currentUser) return;
+  const evs = db.events;
+  document.getElementById('kpi-total').textContent=evs.length;
+  document.getElementById('kpi-active').textContent=evs.filter(e=>e.status==='approved').length;
+  document.getElementById('kpi-students').textContent=Object.values(USERS).filter(u=>u.role==='student').length;
+  document.getElementById('kpi-regs').textContent=db.registrations.length;
+
+  const uid=currentUser.username;
+  const myIds=db.registrations.filter(r=>r.studentId===uid).map(r=>r.eventId);
+  const upcoming=evs.filter(e=>e.status==='approved').slice(0,5);
+  document.getElementById('dash-upcoming').innerHTML = upcoming.length ? upcoming.map(e=>{
+    const d=new Date(e.start); const spots=e.maxP-e.curP;
+    return `<div class="event-row" onclick="openEventModal(${e.id})">
+      <div class="event-date-box"><div class="date-month">${MONTHS[d.getMonth()]}</div><div class="date-day">${d.getDate()}</div></div>
+      <div class="event-info">
+        <div class="event-title">${e.title}</div>
+        <div class="event-meta"><i class="ti ti-map-pin" style="font-size:11px"></i> ${e.venue}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span class="badge badge-${e.type}">${e.type}</span>
+        <span class="spots ${spots<20?'low':''}">${spots} spots</span>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty"><i class="ti ti-calendar-off"></i>No upcoming events</div>';
+
+  const aiRecs=evs.filter(e=>e.status==='approved').slice(0,3);
+  const reasons=['Popular in your department','High attendance predicted','Matches your interests'];
+  document.getElementById('dash-ai').innerHTML = aiRecs.map((e,i)=>`
+    <div class="ai-card" style="cursor:pointer;margin-bottom:10px" onclick="openEventModal(${e.id})">
+      <div class="ai-label"><i class="ti ti-sparkles"></i> AI pick</div>
+      <div style="font-weight:600;font-size:13px;margin-bottom:3px">${e.title}</div>
+      <div style="font-size:11px;color:var(--text2)">${reasons[i%3]}</div>
+    </div>`).join('');
+
+  const types=['workshop','seminar','cultural','sports','conference'];
+  const typeIcons={workshop:'ti-tool',seminar:'ti-book',cultural:'ti-confetti',sports:'ti-ball-football',conference:'ti-microphone'};
+  document.getElementById('dash-cats').innerHTML = types.map(t=>{
+    const cnt=evs.filter(e=>e.type===t).length;
+    return `<div class="kpi" style="cursor:pointer;text-align:center" onclick="setFilter(null,'${t}');navigate('events')">
+      <div style="font-size:22px;margin-bottom:6px"><i class="ti ${typeIcons[t]}" style="color:var(--accent)"></i></div>
+      <div class="kpi-val">${cnt}</div>
+      <div class="kpi-lbl" style="text-transform:capitalize">${t}</div>
+    </div>`;
+  }).join('');
+}
+
+function setFilter(btn, type){
+  currentFilter=type;
+  document.querySelectorAll('#page-events .filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  else { const b=document.querySelector(`[data-type="${type}"]`); if(b) b.classList.add('active'); }
+  renderEvents();
+}
+
+function renderEvents(){
+  const search=(document.getElementById('event-search')?.value||'').toLowerCase();
+  let evs=[...db.events];
+  if(currentFilter!=='all') evs=evs.filter(e=>e.type===currentFilter);
+  if(search) evs=evs.filter(e=>e.title.toLowerCase().includes(search)||e.venue.toLowerCase().includes(search));
+  const uid=currentUser?.username;
+  const myIds=uid?db.registrations.filter(r=>r.studentId===uid).map(r=>r.eventId):[];
+  document.getElementById('events-tbody').innerHTML = evs.length ? evs.map(e=>{
+    const d=new Date(e.start); const spots=e.maxP-e.curP; const isReg=myIds.includes(e.id);
+    return `<tr onclick="openEventModal(${e.id})" style="cursor:pointer">
+      <td style="padding-left:16px"><div style="font-weight:500">${e.title}</div><div style="font-size:11px;color:var(--text3)">${e.code}</div></td>
+      <td style="white-space:nowrap;color:var(--text2)">${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}</td>
+      <td style="font-size:12px;color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.venue}</td>
+      <td><span class="badge badge-${e.type}">${e.type}</span></td>
+      <td><span class="badge badge-${e.status}">${e.status}</span></td>
+      <td><span class="spots ${spots<20?'low':''}">${spots} left</span></td>
+      <td>${isReg?'<span style="font-size:11px;color:var(--green)"><i class="ti ti-check"></i> Registered</span>':'–'}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7"><div class="empty"><i class="ti ti-search"></i>No events found</div></td></tr>';
+}
+
+function renderMyEvents(){
+  if(!currentUser) return;
+  const uid=currentUser.username;
+  const myRegs=db.registrations.filter(r=>r.studentId===uid);
+  const grid=document.getElementById('my-events-grid');
+  const empty=document.getElementById('my-events-empty');
+  if(!myRegs.length){grid.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  grid.innerHTML = myRegs.map(reg=>{
+    const ev=db.events.find(e=>e.id===reg.eventId); if(!ev) return '';
+    const d=new Date(ev.start);
+    const hasFb=db.feedback.find(f=>f.eventId===ev.id&&f.userId===uid);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div class="event-date-box"><div class="date-month">${MONTHS[d.getMonth()]}</div><div class="date-day">${d.getDate()}</div></div>
+        <span class="att-status att-${reg.status}">${reg.status}</span>
+      </div>
+      <div style="font-weight:600;margin-bottom:4px;font-size:14px">${ev.title}</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px"><i class="ti ti-map-pin" style="font-size:12px"></i> ${ev.venue}</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px"><i class="ti ti-calendar" style="font-size:11px"></i> ${d.toLocaleString()}</div>
+      <div class="qr-box"><i class="ti ti-qrcode" style="font-size:28px"></i></div>
+      <div style="font-size:10px;text-align:center;color:var(--text3);margin-bottom:12px;font-family:monospace">${reg.cert}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="openEventModal(${ev.id})" style="font-size:12px"><i class="ti ti-eye"></i> Details</button>
+        ${reg.status==='attended'?`<button class="btn btn-sm btn-success" onclick="showCert(${reg.id})"><i class="ti ti-certificate"></i> Certificate</button>`:''}
+        ${reg.status==='attended'&&!hasFb?`<button class="btn btn-sm" onclick="openFeedback(${ev.id})" style="font-size:12px"><i class="ti ti-star"></i> Rate</button>`:''}
+        ${reg.status==='registered'?`<button class="btn btn-sm btn-danger" onclick="cancelReg(${reg.id})"><i class="ti ti-x"></i> Cancel</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openEventModal(eventId){
+  const ev=db.events.find(e=>e.id===eventId); if(!ev) return;
+  const d=new Date(ev.start); const d2=new Date(ev.end);
+  const spots=ev.maxP-ev.curP; const pct=Math.round((ev.curP/ev.maxP)*100);
+  const uid=currentUser?.username;
+  const reg=uid?db.registrations.find(r=>r.eventId===eventId&&r.studentId===uid):null;
+  const isStudent=currentUser?.role==='student';
+  const totalExp=db.expenses.filter(e=>e.eventId===eventId).reduce((s,e)=>s+e.amt,0);
+  const fbs=db.feedback.filter(f=>f.eventId===eventId);
+  const avgR=fbs.length?(fbs.reduce((s,f)=>s+f.rating,0)/fbs.length).toFixed(1):'–';
+  const predAtt={workshop:75,cultural:85,seminar:60,sports:88,conference:70}[ev.type]||70;
+  const hasFb=uid&&db.feedback.find(f=>f.eventId===eventId&&f.userId===uid);
+
+  document.getElementById('modal-title-txt').textContent=ev.title;
+  document.getElementById('modal-content').innerHTML=`
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+      <span class="badge badge-${ev.type}">${ev.type}</span>
+      <span class="badge badge-${ev.status}">${ev.status}</span>
+      ${spots<20?`<span class="badge" style="background:var(--red-bg);color:var(--red)">Only ${spots} spots left!</span>`:''}
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">${ev.desc}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;font-size:13px">
+      <div style="background:var(--surface2);padding:10px;border-radius:var(--radius)">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Start</div>
+        <div style="font-weight:500">${d.toLocaleString()}</div>
+      </div>
+      <div style="background:var(--surface2);padding:10px;border-radius:var(--radius)">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">End</div>
+        <div style="font-weight:500">${d2.toLocaleString()}</div>
+      </div>
+      <div style="background:var(--surface2);padding:10px;border-radius:var(--radius)">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Venue</div>
+        <div style="font-weight:500">${ev.venue}</div>
+      </div>
+      <div style="background:var(--surface2);padding:10px;border-radius:var(--radius)">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Budget</div>
+        <div style="font-weight:500">Rs. ${ev.budget.toLocaleString()}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;color:var(--text2)">
+        <span>Registrations</span><span style="font-weight:500">${ev.curP} / ${ev.maxP}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pct>90?'var(--red)':pct>70?'#EF9F27':'var(--accent)'}"></div></div>
+    </div>
+    <div class="ai-card" style="margin-bottom:16px">
+      <div class="ai-label"><i class="ti ti-brain"></i> AI insights</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div style="font-size:12px"><div style="color:var(--text3);margin-bottom:2px">Predicted attendance</div><b>${predAtt}%</b></div>
+        <div style="font-size:12px"><div style="color:var(--text3);margin-bottom:2px">Avg rating</div><b>${avgR}${fbs.length?'/5':''}</b></div>
+        <div style="font-size:12px"><div style="color:var(--text3);margin-bottom:2px">Budget spent</div><b>Rs. ${totalExp.toLocaleString()}</b></div>
+      </div>
+    </div>
+    ${fbs.length?`<div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text2)">Recent feedback</div>
+      ${fbs.slice(0,2).map(f=>`<div style="padding:9px;background:var(--surface2);border-radius:var(--radius);font-size:12px;margin-bottom:6px;color:var(--text2)"><span style="color:#EF9F27">${'★'.repeat(f.rating)}</span><span style="color:var(--border2)">${'★'.repeat(5-f.rating)}</span> <span style="margin-left:4px">"${f.comment}"</span></div>`).join('')}
+    </div>`:''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:4px;border-top:1px solid var(--border)">
+      ${isStudent&&!reg?`<button class="btn btn-primary btn-sm" onclick="registerEvent(${ev.id})"><i class="ti ti-circle-plus"></i> Register now</button>`:''}
+      ${reg?`<span style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--green)"><i class="ti ti-check-circle"></i> Registered (${reg.status})</span>`:''}
+      ${reg?.status==='attended'?`<button class="btn btn-sm btn-success" onclick="showCert(${reg.id})"><i class="ti ti-certificate"></i> Get certificate</button>`:''}
+      ${reg?.status==='attended'&&!hasFb?`<button class="btn btn-sm" onclick="closeThenFeedback(${ev.id})"><i class="ti ti-star"></i> Rate event</button>`:''}
+      ${reg?.status==='registered'?`<button class="btn btn-sm btn-danger" onclick="cancelRegModal(${reg.id})"><i class="ti ti-x"></i> Cancel registration</button>`:''}
+    </div>`;
+  document.getElementById('event-modal').classList.add('open');
+}
+
+function closeModal(){ document.getElementById('event-modal').classList.remove('open'); }
+function closeCertModal(){ document.getElementById('cert-modal').classList.remove('open'); }
+function closeFbModal(){ document.getElementById('feedback-modal').classList.remove('open'); fbRating=0; }
+
+function closeThenFeedback(evId){ closeModal(); openFeedback(evId); }
+
+function registerEvent(eventId){
+  if(!currentUser||currentUser.role!=='student'){notify('Only students can register','error');return;}
+  const ev=db.events.find(e=>e.id===eventId);
+  if(!ev||ev.curP>=ev.maxP){notify('Event is full!','error');return;}
+  const already=db.registrations.find(r=>r.eventId===eventId&&r.studentId===currentUser.username);
+  if(already){notify('Already registered!','error');return;}
+  const cert='CERT-'+Math.random().toString(36).slice(2,10).toUpperCase();
+  db.registrations.push({id:nextRegId++,eventId,studentId:currentUser.username,status:'registered',cert,certIssued:false});
+  ev.curP++;
+  closeModal();
+  notify('Successfully registered for '+ev.title+'!');
+  renderEvents();
+}
+
+function cancelReg(regId){
+  const reg=db.registrations.find(r=>r.id===regId);
+  if(!reg) return;
+  const ev=db.events.find(e=>e.id===reg.eventId);
+  if(ev&&reg.status==='registered') ev.curP--;
+  db.registrations=db.registrations.filter(r=>r.id!==regId);
+  notify('Registration cancelled');
+  renderMyEvents();
+}
+
+function cancelRegModal(regId){
+  cancelReg(regId); closeModal();
+}
+
+function showCert(regId){
+  const reg=db.registrations.find(r=>r.id===regId);
+  const ev=reg?db.events.find(e=>e.id===reg.eventId):null;
+  if(!reg||!ev) return;
+  reg.certIssued=true; closeModal();
+  const u=USERS[reg.studentId];
+  document.getElementById('cert-content').innerHTML=`
+    <div class="cert-box">
+      <div style="font-size:32px;margin-bottom:8px">🎓</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:6px">This is to certify that</div>
+      <div style="font-size:20px;font-weight:700;color:var(--accent);margin-bottom:6px">${u?.name||reg.studentId}</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:4px">has successfully participated in</div>
+      <div style="font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px">${ev.title}</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">${new Date(ev.start).toDateString()} · ${ev.venue}</div>
+      <div style="font-size:11px;font-family:monospace;background:var(--surface);padding:6px 12px;border-radius:var(--radius);display:inline-block;color:var(--text2)">${reg.cert}</div>
+    </div>`;
+  document.getElementById('cert-modal').classList.add('open');
+  notify('Certificate ready!');
+}
+
+function openFeedback(eventId){
+  fbEventId=eventId; fbRating=0;
+  const ev=db.events.find(e=>e.id===eventId);
+  document.getElementById('fb-modal-title').textContent='Rate: '+ev.title;
+  document.getElementById('fb-form').innerHTML=`
+    <div class="form-group"><div class="form-label">Your rating</div>
+      <div class="rating-stars" id="stars-row">
+        ${[1,2,3,4,5].map(i=>`<span class="star" data-v="${i}" onclick="setFbRating(${i})">★</span>`).join('')}
+      </div>
+    </div>
+    <div class="form-group"><div class="form-label">Comment</div>
+      <textarea id="fb-comment" class="form-input" placeholder="Tell us about your experience..."></textarea>
+    </div>
+    <div class="form-group"><div class="form-label">Suggestions (optional)</div>
+      <textarea id="fb-suggestions" class="form-input" placeholder="How can we improve?" style="min-height:56px"></textarea>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="submitFeedback()"><i class="ti ti-send"></i> Submit feedback</button>`;
+  document.getElementById('feedback-modal').classList.add('open');
+}
+
+function setFbRating(v){
+  fbRating=v;
+  document.querySelectorAll('#stars-row .star').forEach(s=>{ s.classList.toggle('on',parseInt(s.dataset.v)<=v); });
+}
+
+function submitFeedback(){
+  if(!fbRating){notify('Please select a rating','error');return;}
+  const comment=document.getElementById('fb-comment').value.trim();
+  db.feedback.push({id:Date.now(),eventId:fbEventId,userId:currentUser.username,rating:fbRating,comment});
+  closeFbModal();
+  notify('Thank you for your feedback!');
+  renderMyEvents();
+}
+
+function renderAttendancePage(){
+  const myEvs=currentUser?.role==='admin'?db.events:db.events.filter(e=>e.organizer===currentUser?.username);
+  const sel=document.getElementById('att-event');
+  sel.innerHTML=myEvs.map(e=>`<option value="${e.id}">${e.title}</option>`).join('');
+  if(myEvs.length) loadAttendance();
+  else document.getElementById('att-list').innerHTML='<div class="empty"><i class="ti ti-calendar-off"></i>No events to manage</div>';
+}
+
+function loadAttendance(){
+  const eid=parseInt(document.getElementById('att-event').value);
+  const regs=db.registrations.filter(r=>r.eventId===eid);
+  const att=regs.filter(r=>r.status==='attended').length;
+  const total=regs.length;
+  document.getElementById('att-list').innerHTML = regs.length ? `
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <div class="kpi" style="flex:1;padding:12px"><div class="kpi-val" style="font-size:18px">${total}</div><div class="kpi-lbl">Registered</div></div>
+      <div class="kpi" style="flex:1;padding:12px"><div class="kpi-val" style="font-size:18px;color:var(--green)">${att}</div><div class="kpi-lbl">Attended</div></div>
+      <div class="kpi" style="flex:1;padding:12px"><div class="kpi-val" style="font-size:18px">${total>0?Math.round(att/total*100):0}%</div><div class="kpi-lbl">Rate</div></div>
+    </div>
+    <table class="table">
+      <thead><tr><th>Student</th><th>Student ID</th><th>Reg code</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>${regs.map(r=>{
+        const u=USERS[r.studentId];
+        return `<tr>
+          <td style="font-weight:500">${u?.name||r.studentId}</td>
+          <td style="font-size:12px;color:var(--text2)">${u?.sid||'–'}</td>
+          <td style="font-size:11px;font-family:monospace;color:var(--text3)">${r.cert}</td>
+          <td><span class="att-status att-${r.status}">${r.status}</span></td>
+          <td>${r.status==='registered'?`<button class="btn btn-sm btn-success" onclick="markAttended(${r.id})"><i class="ti ti-check"></i> Mark attended</button>`:r.status==='attended'?'<span style="color:var(--green);font-size:12px"><i class="ti ti-check-circle"></i> Done</span>':'–'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>` : '<div class="empty"><i class="ti ti-users"></i>No registrations for this event</div>';
+}
+
+function markAttended(regId){
+  const reg=db.registrations.find(r=>r.id===regId);
+  if(reg){reg.status='attended'; loadAttendance(); notify('Attendance marked!');}
+}
+
+function renderBudgetPage(){
+  const myEvs=currentUser?.role==='admin'?db.events:db.events.filter(e=>e.organizer===currentUser?.username);
+  const sel=document.getElementById('budget-event');
+  sel.innerHTML=myEvs.map(e=>`<option value="${e.id}">${e.title}</option>`).join('');
+  if(myEvs.length) loadBudget();
+}
+
+function loadBudget(){
+  const eid=parseInt(document.getElementById('budget-event').value);
+  const ev=db.events.find(e=>e.id===eid); if(!ev) return;
+  const exps=db.expenses.filter(e=>e.eventId===eid);
+  const total=exps.reduce((s,e)=>s+e.amt,0);
+  const remaining=ev.budget-total;
+  const pct=ev.budget>0?Math.min(100,Math.round(total/ev.budget*100)):0;
+  const pctColor=pct>90?'var(--red)':pct>70?'#EF9F27':'var(--accent)';
+  document.getElementById('budget-summary').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div class="kpi" style="padding:12px"><div class="kpi-val" style="font-size:15px">Rs.${ev.budget.toLocaleString()}</div><div class="kpi-lbl">Budget</div></div>
+      <div class="kpi" style="padding:12px"><div class="kpi-val" style="font-size:15px;color:${total>ev.budget?'var(--red)':'var(--text)'}">Rs.${total.toLocaleString()}</div><div class="kpi-lbl">Spent</div></div>
+      <div class="kpi" style="padding:12px"><div class="kpi-val" style="font-size:15px;color:${remaining<0?'var(--red)':'var(--green)'}">Rs.${remaining.toLocaleString()}</div><div class="kpi-lbl">Remaining</div></div>
+    </div>
+    <div style="margin-bottom:4px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;color:var(--text2)"><span>Budget utilization</span><span style="font-weight:500">${pct}%</span></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pctColor}"></div></div></div>`;
+
+  const cats={workshop:{venue:.2,materials:.4,catering:.2,marketing:.1,misc:.1},cultural:{venue:.3,decorations:.25,performance:.2,catering:.15,misc:.1},seminar:{venue:.25,speaker:.35,catering:.2,marketing:.1,misc:.1},sports:{venue:.4,equipment:.3,prizes:.15,medical:.05,misc:.1},conference:{venue:.25,speaker:.3,catering:.2,marketing:.1,misc:.15}};
+  const alloc=cats[ev.type]||cats.seminar;
+  document.getElementById('budget-ai-recs').style.display='block';
+  document.getElementById('budget-ai-content').innerHTML=Object.entries(alloc).map(([k,v])=>`
+    <div style="margin-bottom:8px">
+      <div class="budget-cat-row"><span style="text-transform:capitalize">${k}</span><span>Rs. ${Math.round(ev.budget*v).toLocaleString()} (${Math.round(v*100)}%)</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.round(v*100)}%"></div></div>
+    </div>`).join('');
+
+  document.getElementById('expenses-tbody').innerHTML=exps.length?exps.map(e=>`<tr>
+    <td style="padding-left:10px;font-weight:500">${e.desc}</td>
+    <td><span class="badge badge-workshop" style="background:var(--surface2);color:var(--text2)">${e.cat}</span></td>
+    <td>Rs. ${e.amt.toLocaleString()}</td>
+    <td><button class="btn btn-sm btn-danger" onclick="deleteExpense(${e.id})"><i class="ti ti-trash"></i></button></td>
+  </tr>`).join(''):'<tr><td colspan="4"><div class="empty"><i class="ti ti-receipt"></i>No expenses recorded yet</div></td></tr>';
+}
+
+function addExpense(){
+  const eid=parseInt(document.getElementById('budget-event').value);
+  const desc=document.getElementById('exp-desc').value.trim();
+  const amt=parseFloat(document.getElementById('exp-amt').value);
+  const cat=document.getElementById('exp-cat').value;
+  if(!desc||!amt||amt<=0){notify('Enter a description and valid amount','error');return;}
+  db.expenses.push({id:nextExpId++,eventId:eid,desc,cat,amt});
+  document.getElementById('exp-desc').value='';
+  document.getElementById('exp-amt').value='';
+  loadBudget(); notify('Expense added');
+}
+
+function deleteExpense(expId){
+  db.expenses=db.expenses.filter(e=>e.id!==expId);
+  loadBudget(); notify('Expense removed');
+}
+
+function updateAIBudget(){
+  const type=document.getElementById('ev-type').value;
+  const budget=parseFloat(document.getElementById('ev-budget').value)||0;
+  const el=document.getElementById('ai-budget-recs');
+  if(!budget){el.style.display='none';return;}
+  const cats={workshop:{venue:.2,materials:.4,catering:.2,marketing:.1,misc:.1},cultural:{venue:.3,decorations:.25,performance:.2,catering:.15,misc:.1},seminar:{venue:.25,speaker:.35,catering:.2,marketing:.1,misc:.1},sports:{venue:.4,equipment:.3,prizes:.15,medical:.05,misc:.1},conference:{venue:.25,speaker:.3,catering:.2,marketing:.1,misc:.15}};
+  const alloc=cats[type]||cats.seminar;
+  el.style.display='block';
+  document.getElementById('ai-budget-content').innerHTML=Object.entries(alloc).map(([k,v])=>`
+    <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--text2)"><span style="text-transform:capitalize">${k}</span><span style="font-weight:500">Rs. ${Math.round(budget*v).toLocaleString()} (${Math.round(v*100)}%)</span></div>`).join('');
+}
+
+function createEvent(){
+  const title=document.getElementById('ev-title').value.trim();
+  const desc=document.getElementById('ev-desc').value.trim();
+  const type=document.getElementById('ev-type').value;
+  const venue=document.getElementById('ev-venue').value.trim();
+  const start=document.getElementById('ev-start').value;
+  const end=document.getElementById('ev-end').value;
+  const deadline=document.getElementById('ev-deadline').value;
+  const maxP=parseInt(document.getElementById('ev-max').value)||50;
+  const budget=parseFloat(document.getElementById('ev-budget').value)||0;
+  const approval=document.getElementById('ev-approval').checked;
+  if(!title||!venue||!start||!end){notify('Please fill in all required fields','error');return;}
+  if(start>=end){notify('End time must be after start time','error');return;}
+  const cw=document.getElementById('conflict-warn');
+  const conflicts=db.events.filter(e=>e.venue.toLowerCase()===venue.toLowerCase()&&e.start<end&&e.end>start);
+  if(conflicts.length){
+    cw.style.display='flex';
+    document.getElementById('conflict-msg').textContent=`Venue conflict with: ${conflicts.map(e=>e.title).join(', ')}. Choose a different venue or time.`;
+    return;
+  }
+  cw.style.display='none';
+  const code='EVT'+String(nextEvId).padStart(3,'0');
+  db.events.push({id:nextEvId++,code,title,desc,type,venue,start,end,deadline,maxP,curP:0,budget,organizer:currentUser.username,status:approval?'pending':'approved'});
+  ['ev-title','ev-desc','ev-venue','ev-start','ev-end','ev-deadline'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ev-max').value='50';
+  document.getElementById('ev-budget').value='0';
+  document.getElementById('ai-budget-recs').style.display='none';
+  notify(`Event created: ${code}`);
+  navigate('events');
+}
+
+function renderReports(){
+  const types=['workshop','seminar','cultural','sports','conference'];
+  const counts=types.map(t=>db.events.filter(e=>e.type===t).length);
+  const maxCnt=Math.max(...counts,1);
+  document.getElementById('report-types').innerHTML=types.map((t,i)=>{
+    const cnt=counts[i];
+    const totalP=db.events.filter(e=>e.type===t).reduce((s,e)=>s+e.curP,0);
+    return `<div class="stat-row">
+      <div style="width:90px;font-size:13px;text-transform:capitalize;font-weight:500">${t}</div>
+      <div style="flex:1;padding:0 12px"><div class="progress-bar"><div class="progress-fill" style="width:${Math.round(cnt/maxCnt*100)}%"></div></div></div>
+      <div style="font-size:11px;color:var(--text2);width:100px;text-align:right">${cnt} events · ${totalP} registrations</div>
+    </div>`;
+  }).join('');
+
+  const popular=[...db.events].sort((a,b)=>b.curP-a.curP).slice(0,5);
+  document.getElementById('report-popular').innerHTML=popular.map((e,i)=>`
+    <div class="stat-row">
+      <div style="width:22px;font-size:13px;font-weight:700;color:var(--text3)">${i+1}</div>
+      <div style="flex:1;font-size:13px;margin:0 10px"><div style="font-weight:500">${e.title}</div><div style="font-size:11px;color:var(--text3)">${e.type}</div></div>
+      <div style="font-size:12px;color:var(--text2);font-weight:500">${e.curP}<span style="color:var(--text3);font-weight:400">/${e.maxP}</span></div>
+    </div>`).join('');
+
+  const totalRegs=db.registrations.length;
+  const attended=db.registrations.filter(r=>r.status==='attended').length;
+  const certs=db.registrations.filter(r=>r.certIssued).length;
+  const totalBudget=db.events.reduce((s,e)=>s+e.budget,0);
+  const totalExpenses=db.expenses.reduce((s,e)=>s+e.amt,0);
+  document.getElementById('report-overview').innerHTML=[
+    ['Total registrations',totalRegs,'ti-users','var(--accent)'],
+    ['Attended events',attended,'ti-check-circle','var(--green)'],
+    ['Certificates issued',certs,'ti-certificate','var(--amber)'],
+    ['Events created',db.events.length,'ti-calendar','var(--blue)'],
+    [`Total budget`,`Rs.${totalBudget.toLocaleString()}`,'ti-wallet','var(--accent)'],
+    ['Avg attendance',totalRegs>0?Math.round(attended/totalRegs*100)+'%':'0%','ti-chart-bar','var(--green)']
+  ].map(([lbl,val,ico,col])=>`<div class="kpi">
+    <div class="kpi-icon"><i class="ti ${ico}" style="color:${col}"></i></div>
+    <div class="kpi-val">${val}</div><div class="kpi-lbl">${lbl}</div>
+  </div>`).join('');
+}
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal(); closeCertModal(); closeFbModal(); } });
+
+navigate('login');
+</script>
+</body>
+</html>
